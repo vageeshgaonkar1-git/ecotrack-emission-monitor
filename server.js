@@ -41,6 +41,7 @@ app.post('/data', (req, res) => {
     const co_status  = co_ppm < 4000  ? 'PASS' : 'FAIL';
     const hc_status  = hc_ppm < 150   ? 'PASS' : 'FAIL';
     const overall_grade = getGrade(co_ppm, aqi, hc_ppm);
+    const PORT = process.env.PORT || 3000;
 
     db.saveReading({
       co_ppm, aqi, hc_ppm,
