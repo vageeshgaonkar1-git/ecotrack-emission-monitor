@@ -1,83 +1,100 @@
-const Database = require('better-sqlite3');
-const db = new Database('ecotrack.db');
+const fs   = require('fs');
+const path = require('path');
 
-// Create tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS readings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    co_ppm REAL,
-    aqi REAL,
-    hc_ppm REAL,
-    temperature REAL,
-    humidity REAL,
-    vehicle_status TEXT,
-    vibration_level REAL,
-    emission_status TEXT,
-    co_status TEXT,
-    hc_status TEXT,
-    overall_grade TEXT
-  );
-`);
+// Simple JSON file database
+// Works everywhere, zero dependencies
+const DB_FILE = path.join(__dirname, 'data.json');
+
+// Initialize database file
+function initDB() {
+  if (!fs.existsSync(DB_FILE)) {
+    fs.writeFileSync(DB_FILE, JSON.stringify({ readings: [] }));
+  }
+}
+
+function readDB() {
+  initDB();
+  return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+}
+
+function writeDB(data) {
+  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
 
 // Save one reading
 function saveReading(data) {
-  const stmt = db.prepare(`
-    INSERT INTO readings 
-    (co_ppm, aqi, hc_ppm, temperature, humidity,
-     vehicle_status, vibration_level, emission_status,
-     co_status, hc_status, overall_grade)
-    VALUES 
-    (@co_ppm, @aqi, @hc_ppm, @temperature, @humidity,
-     @vehicle_status, @vibration_level, @emission_status,
-     @co_status, @hc_status, @overall_grade)
-  `);
-  stmt.run(data);
+  const db = readDB();
+  const reading = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    ...data
+  };
+  db.readings.push(reading);
+
+  // Keep only last 1000 readings to prevent file getting too large
+  if (db.readings.length > 1000) {
+    db.readings = db.readings.slice(-1000);
+  }
+
+  writeDB(db);
+  return reading;
 }
 
-// Get latest reading
+// Get latest single reading
 function getLatestReading() {
-  return db.prepare(`
-    SELECT * FROM readings 
-    ORDER BY timestamp DESC 
-    LIMIT 1
-  `).get();
+  const db = readDB();
+  if (!db.readings.length) return null;
+  return db.readings[db.readings.length - 1];
 }
 
 // Get readings for last N hours
 function getReadingsByHours(hours) {
-  return db.prepare(`
-    SELECT * FROM readings
-    WHERE timestamp >= datetime('now', '-${hours} hours')
-    ORDER BY timestamp ASC
-  `).all();
+  const db = readDB();
+  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+  return db.readings.filter(r => new Date(r.timestamp) >= cutoff);
 }
 
-// Get daily averages
+// Get daily session stats
 function getSessionStats() {
-  return db.prepare(`
-    SELECT 
-      DATE(timestamp) as date,
-      ROUND(AVG(co_ppm), 2) as avg_co,
-      ROUND(AVG(aqi), 2) as avg_aqi,
-      ROUND(AVG(hc_ppm), 2) as avg_hc,
-      overall_grade,
-      COUNT(*) as total_readings
-    FROM readings
-    GROUP BY DATE(timestamp)
-    ORDER BY date DESC
-    LIMIT 10
-  `).all();
+  const db = readDB();
+  const groups = {};
+
+  db.readings.forEach(r => {
+    const date = r.timestamp.split('T')[0];
+    if (!groups[date]) {
+      groups[date] = {
+        date,
+        co_vals: [], aqi_vals: [], hc_vals: [],
+        grades: [], count: 0
+      };
+    }
+    groups[date].co_vals.push(r.co_ppm   || 0);
+    groups[date].aqi_vals.push(r.aqi     || 0);
+    groups[date].hc_vals.push(r.hc_ppm   || 0);
+    groups[date].grades.push(r.overall_grade || 'A');
+    groups[date].count++;
+  });
+
+  return Object.values(groups)
+    .map(g => ({
+      date:           g.date,
+      avg_co:         +(g.co_vals.reduce((a,b)=>a+b,0)/g.count).toFixed(2),
+      avg_aqi:        +(g.aqi_vals.reduce((a,b)=>a+b,0)/g.count).toFixed(2),
+      avg_hc:         +(g.hc_vals.reduce((a,b)=>a+b,0)/g.count).toFixed(2),
+      overall_grade:  g.grades[g.grades.length - 1],
+      total_readings: g.count
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 10);
 }
 
 // Get danger alerts
 function getDangerAlerts() {
-  return db.prepare(`
-    SELECT * FROM readings
-    WHERE emission_status = 'DANGER'
-    ORDER BY timestamp DESC
-    LIMIT 10
-  `).all();
+  const db = readDB();
+  return db.readings
+    .filter(r => r.emission_status === 'DANGER')
+    .slice(-10)
+    .reverse();
 }
 
 module.exports = {

@@ -1,4 +1,4 @@
 node_modules/
-ecotrack.db
+data.json
 .env
 *.log
