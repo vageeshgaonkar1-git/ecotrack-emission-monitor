@@ -1,0 +1,179 @@
+/* ── Reset & Base ── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+}
+
+.logo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #58a6ff;
+}
+
+.subtitle {
+  margin-left: 12px;
+  color: #8b949e;
+  font-size: 0.9rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: #8b949e;
+}
+
+/* ── Main Layout ── */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #8b949e;
+  margin: 28px 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Cards ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.card-label {
+  font-size: 0.8rem;
+  color: #8b949e;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #58a6ff;
+}
+
+.card-value span {
+  font-size: 0.85rem;
+  color: #8b949e;
+}
+
+.card-limit {
+  font-size: 0.75rem;
+  color: #8b949e;
+  margin: 8px 0;
+}
+
+/* ── Badges ── */
+.badge, .card-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.badge-safe, .pass   { background: #1a4731; color: #3fb950; }
+.badge-warn, .warn   { background: #3d2f00; color: #d29922; }
+.badge-danger, .fail { background: #4a1515; color: #f85149; }
+.badge-info          { background: #1c2d3f; color: #58a6ff; }
+
+/* ── Status Bar ── */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: 12px;
+  margin: 16px 0;
+  background: #161b22;
+  border: 1px solid #30363d;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.grade-badge {
+  font-size: 1rem;
+  color: #58a6ff;
+}
+
+/* ── Chart ── */
+.chart-box {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 24px;
+  height: 300px;
+}
+
+/* ── Tables ── */
+.table-box {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #21262d;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.82rem;
+  color: #8b949e;
+  text-transform: uppercase;
+}
+
+td {
+  padding: 12px 16px;
+  border-top: 1px solid #21262d;
+  font-size: 0.9rem;
+}
+
+tr:hover td { background: #1c2128; }
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #30363d;
+  font-size: 0.8rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .cards-grid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EcoTrack | Vehicle Emission Monitor</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <span class="logo">🚗 EcoTrack</span>
+      <span class="subtitle">Vehicle Emission Monitor</span>
+    </div>
+    <div class="header-right">
+      <span id="vehicle-status" class="badge badge-safe">● VEHICLE OFF</span>
+      <span id="last-updated">Last updated: --</span>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <main>
+
+    <!-- SECTION 1: LIVE READING CARDS -->
+    <section class="section-title">📡 Live Readings</section>
+    <div class="cards-grid">
+
+      <div class="card">
+        <div class="card-label">CO Level</div>
+        <div class="card-value" id="co-value">-- <span>PPM</span></div>
+        <div class="card-limit">PUC Limit: 5000 PPM</div>
+        <div class="card-badge" id="co-status">--</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Air Quality (AQI)</div>
+        <div class="card-value" id="aqi-value">-- <span></span></div>
+        <div class="card-limit">Safe: Below 150</div>
+        <div class="card-badge" id="aqi-status">--</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Hydrocarbons (HC)</div>
+        <div class="card-value" id="hc-value">-- <span>PPM</span></div>
+        <div class="card-limit">PUC Limit: 150 PPM</div>
+        <div class="card-badge" id="hc-status">--</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Temperature</div>
+        <div class="card-value" id="temp-value">-- <span>°C</span></div>
+        <div class="card-limit">Humidity: <span id="humidity-value">--%</span></div>
+        <div class="card-badge badge-info">AMBIENT</div>
+      </div>
+
+    </div>
+
+    <!-- EMISSION STATUS BAR -->
+    <div class="status-bar" id="emission-status-bar">
+      <span id="emission-label">⏳ Waiting for data...</span>
+      <span class="grade-badge" id="grade-badge">Grade: --</span>
+    </div>
+
+    <!-- SECTION 2: LIVE GRAPH -->
+    <section class="section-title">📈 Live Emission Graph</section>
+    <div class="chart-box">
+      <canvas id="emissionChart"></canvas>
+    </div>
+
+    <!-- SECTION 3: PUC COMPARISON -->
+    <section class="section-title">📋 PUC Standard Comparison</section>
+    <div class="table-box">
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Your Reading</th>
+            <th>PUC Limit</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Carbon Monoxide (CO)</td>
+            <td id="puc-co">--</td>
+            <td>5000 PPM</td>
+            <td id="puc-co-status">--</td>
+          </tr>
+          <tr>
+            <td>Hydrocarbons (HC)</td>
+            <td id="puc-hc">--</td>
+            <td>150 PPM</td>
+            <td id="puc-hc-status">--</td>
+          </tr>
+          <tr>
+            <td>Air Quality Index</td>
+            <td id="puc-aqi">--</td>
+            <td>200 (Safe)</td>
+            <td id="puc-aqi-status">--</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 4: SESSION HISTORY -->
+    <section class="section-title">📅 Session History</section>
+    <div class="table-box">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Avg CO (PPM)</th>
+            <th>Avg AQI</th>
+            <th>Avg HC (PPM)</th>
+            <th>Grade</th>
+            <th>Readings</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr><td colspan="6">Loading history...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <footer>
+    EcoTrack © 2026 | Low-Cost Real-Time Vehicle Emission Monitor
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
