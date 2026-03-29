@@ -64,13 +64,21 @@ function getPucClass(status) {
 
 function formatTime(timestamp) {
   if (!timestamp) return '--';
-  return new Date(timestamp).toLocaleString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    hour:     '2-digit',
-    minute:   '2-digit',
-    second:   '2-digit',
-    hour12:   true
-  });
+  // Timestamp already stored as IST string
+  // Just return it directly
+  try {
+    const d = new Date(timestamp);
+    if (isNaN(d)) return timestamp; // already formatted string
+    return d.toLocaleTimeString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  } catch(e) {
+    return timestamp;
+  }
 }
 
 function safeVal(val, decimals = 1) {

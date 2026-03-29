@@ -112,19 +112,20 @@ app.post('/data', (req, res) => {
       });
     }
 
+    // ← ADD THIS LINE
+    incoming.timestamp = new Date().toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata'
+    });
+
     const processed = processReading(incoming);
     db.saveReading({ ...incoming, ...processed });
 
-    console.log(`[${new Date().toLocaleTimeString()}] CO:${incoming.co_ppm} AQI:${incoming.aqi} Status:${processed.emission_status} Grade:${processed.overall_grade}`);
-
+    console.log(`[${incoming.timestamp}] CO:${incoming.co_ppm} AQI:${incoming.aqi} Status:${processed.emission_status}`);
     res.json({ success: true, ...processed });
 
   } catch (err) {
     console.error('POST /data error:', err.message);
-    res.status(500).json({
-      success: false,
-      error: err.message
-    });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
