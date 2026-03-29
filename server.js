@@ -12,17 +12,69 @@ const PORT = 3000;
 
 // ── Helpers ──────────────────────────────
 
-function getEmissionStatus(co, aqi, hc) {
-  if (co > 5000 || aqi > 300 || hc > 200) return 'DANGER';
-  if (co > 3000 || aqi > 150 || hc > 120) return 'WARNING';
-  return 'SAFE';
-}
+// ── Enhanced Emission Processing ─────────
 
-function getGrade(co, aqi, hc) {
-  if (co > 5000 || hc > 200) return 'F';
-  if (co > 3000 || hc > 150) return 'C';
-  if (co > 1000 || hc > 100) return 'B';
-  return 'A';
+function processReading(data) {
+  const { co_ppm, aqi, hc_ppm, temperature, 
+          humidity, vibration_level } = data;
+
+  // ── PUC Status ──
+  const co_status  = co_ppm  < 4000 ? 'PASS' : 'FAIL';
+  const hc_status  = hc_ppm  < 150  ? 'PASS' : 'FAIL';
+  const aqi_status = aqi     < 200  ? 'PASS' : 'FAIL';
+
+  // ── Emission Status ──
+  let emission_status = 'SAFE';
+  if (co_ppm > 5000 || aqi > 300 || hc_ppm > 200)
+    emission_status = 'DANGER';
+  else if (co_ppm > 3000 || aqi > 150 || hc_ppm > 120)
+    emission_status = 'WARNING';
+
+  // ── Overall Grade ──
+  let overall_grade = 'A';
+  if      (co_ppm > 5000 || hc_ppm > 200) overall_grade = 'F';
+  else if (co_ppm > 3000 || hc_ppm > 150) overall_grade = 'C';
+  else if (co_ppm > 1000 || hc_ppm > 100) overall_grade = 'B';
+
+  // ── Additional Parameters ──
+
+  // CO2 estimate from MQ-135 (approximate)
+  const co2_ppm = Math.round(400 + (aqi * 2.1));
+
+  // NH3 estimate from MQ-135
+  const nh3_ppm = parseFloat((aqi * 0.08).toFixed(1));
+
+  // Benzene flag
+  const benzene_risk = aqi > 200 ? 'ELEVATED' : 'NORMAL';
+
+  // Engine load from vibration
+  let engine_load = 'IDLE';
+  if      (vibration_level > 1.5) engine_load = 'HIGH';
+  else if (vibration_level > 0.8) engine_load = 'MEDIUM';
+  else if (vibration_level > 0.3) engine_load = 'LOW';
+
+  // Heat index (Steadman formula simplified)
+  const heat_index = parseFloat(
+    (temperature + 0.33 * (humidity / 100 * 6.105 *
+    Math.exp(17.27 * temperature / (237.7 + temperature))) - 4)
+    .toFixed(1)
+  );
+
+  // Lambda (air-fuel ratio indicator)
+  // Estimated from CO and HC levels
+  const lambda = parseFloat(
+    (1.0 - (co_ppm / 50000) - (hc_ppm / 10000)).toFixed(3)
+  );
+  const lambda_status = lambda > 0.97 && lambda < 1.03
+    ? 'OPTIMAL' : lambda < 0.97 ? 'RICH' : 'LEAN';
+
+  return {
+    co_status, hc_status, aqi_status,
+    emission_status, overall_grade,
+    co2_ppm, nh3_ppm, benzene_risk,
+    engine_load, heat_index,
+    lambda, lambda_status
+  };
 }
 
 // ── Routes ───────────────────────────────
@@ -73,6 +125,12 @@ app.get('/api/history', (req, res) => {
   res.json(readings);
 });
 
+// Last 5 readings
+app.get('/api/recent', (req, res) => {
+  const recent = db.getLastFiveReadings();
+  res.json(recent);
+});
+
 // Session stats
 app.get('/api/stats', (req, res) => {
   const stats = db.getSessionStats();
@@ -96,6 +154,13 @@ app.get('/test', (req, res) => {
     vehicle_status: 'RUNNING',
     vibration_level: 0.8 + Math.random()
   };
+
+app.get('/reset', (req, res) => {
+  const fs = require('fs');
+  fs.writeFileSync('data.json', JSON.stringify({ readings: [] }));
+  console.log('Database reset!');
+  res.json({ success: true, message: 'All data cleared' });
+});
 
   const emission_status = getEmissionStatus(
     testData.co_ppm, testData.aqi, testData.hc_ppm

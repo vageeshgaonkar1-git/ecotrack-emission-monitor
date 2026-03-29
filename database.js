@@ -104,3 +104,18 @@ module.exports = {
   getSessionStats,
   getDangerAlerts
 };
+
+// Get last 5 readings
+function getLastFiveReadings() {
+  const db = readDB();
+  return db.readings.slice(-5).reverse();
+}
+
+module.exports = {
+  saveReading,
+  getLatestReading,
+  getReadingsByHours,
+  getSessionStats,
+  getDangerAlerts,
+  getLastFiveReadings  // ← Add this
+};

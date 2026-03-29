@@ -70,6 +70,86 @@
       <canvas id="emissionChart"></canvas>
     </div>
 
+    <!-- ADDITIONAL PARAMETERS -->
+<section class="section-title">🧪 Additional Parameters</section>
+<div class="cards-grid extra-grid">
+
+  <div class="card">
+    <div class="card-label">CO₂ Estimate</div>
+    <div class="card-value" id="co2-value">-- <span>PPM</span></div>
+    <div class="card-limit">Normal: ~400 PPM</div>
+    <div class="card-badge badge-info">MQ-135</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">NH₃ (Ammonia)</div>
+    <div class="card-value" id="nh3-value">-- <span>PPM</span></div>
+    <div class="card-limit">Safe: Below 25 PPM</div>
+    <div class="card-badge badge-info">MQ-135</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Engine Load</div>
+    <div class="card-value" id="engine-load" 
+         style="font-size:1.4rem">--</div>
+    <div class="card-limit">Via MPU6050</div>
+    <div class="card-badge badge-info">VIBRATION</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Lambda λ (AFR)</div>
+    <div class="card-value" id="lambda-value">--</div>
+    <div class="card-limit">Optimal: 0.97–1.03</div>
+    <div class="card-badge" id="lambda-status">--</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Heat Index</div>
+    <div class="card-value" id="heat-index">-- <span>°C</span></div>
+    <div class="card-limit">Feels like temp</div>
+    <div class="card-badge badge-info">DHT22</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Benzene Risk</div>
+    <div class="card-value" 
+         id="benzene-risk" 
+         style="font-size:1.2rem">--</div>
+    <div class="card-limit">Via MQ-135</div>
+    <div class="card-badge" id="benzene-badge">--</div>
+  </div>
+
+</div>
+
+<!-- LAST 5 READINGS -->
+<section class="section-title">🕐 Last 5 Readings</section>
+<div class="table-box">
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>CO (PPM)</th>
+        <th>AQI</th>
+        <th>HC (PPM)</th>
+        <th>Temp °C</th>
+        <th>Engine</th>
+        <th>Status</th>
+        <th>Grade</th>
+      </tr>
+    </thead>
+    <tbody id="recent-body">
+      <tr><td colspan="8">Waiting for readings...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- RESET BUTTON -->
+<div style="text-align:center; margin: 20px 0;">
+  <button onclick="resetData()" class="reset-btn">
+    🔄 Reset Graph Data
+  </button>
+</div>
+
     <!-- SECTION 3: PUC COMPARISON -->
     <section class="section-title">📋 PUC Standard Comparison</section>
     <div class="table-box">

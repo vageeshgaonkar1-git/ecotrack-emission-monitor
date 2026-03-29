@@ -135,6 +135,8 @@ async function updateLive() {
   } catch (err) {
     console.error('Live update error:', err);
   }
+  // At the end of updateLive(), add:
+updateAdditional(data);
 }
 
 // ── Update Graph ──────────────────────────
@@ -190,6 +192,8 @@ async function updateHistory() {
 updateLive();
 updateChart();
 updateHistory();
+updateRecent();   
+
 
 // Live cards refresh every 5 seconds
 setInterval(updateLive, 5000);
@@ -197,3 +201,85 @@ setInterval(updateLive, 5000);
 // Graph + history refresh every 30 seconds
 setInterval(updateChart,  30000);
 setInterval(updateHistory, 30000);
+setInterval(updateRecent,  30000);
+
+// ── Update Additional Parameters ─────────
+function updateAdditional(data) {
+  if (!data || !data.co2_ppm) return;
+
+  document.getElementById('co2-value').innerHTML
+    = `${data.co2_ppm} <span>PPM</span>`;
+  document.getElementById('nh3-value').innerHTML
+    = `${data.nh3_ppm} <span>PPM</span>`;
+  document.getElementById('engine-load').textContent
+    = data.engine_load || '--';
+  document.getElementById('lambda-value').textContent
+    = data.lambda || '--';
+  document.getElementById('heat-index').innerHTML
+    = `${data.heat_index} <span>°C</span>`;
+
+  // Lambda status badge
+  const ls = document.getElementById('lambda-status');
+  ls.textContent  = data.lambda_status;
+  ls.className    = `card-badge ${
+    data.lambda_status === 'OPTIMAL' ? 'badge-safe' :
+    data.lambda_status === 'RICH'    ? 'badge-warn' :
+                                       'badge-danger'
+  }`;
+
+  // Benzene
+  const br = document.getElementById('benzene-risk');
+  const bb = document.getElementById('benzene-badge');
+  br.textContent = data.benzene_risk;
+  bb.textContent = data.benzene_risk;
+  bb.className   = `card-badge ${
+    data.benzene_risk === 'NORMAL' ? 'badge-safe' : 'badge-danger'
+  }`;
+}
+
+// ── Update Last 5 Readings Table ──────────
+async function updateRecent() {
+  try {
+    const res      = await fetch('/api/recent');
+    const readings = await res.json();
+    const tbody    = document.getElementById('recent-body');
+
+    if (!readings.length) {
+      tbody.innerHTML
+        = '<tr><td colspan="8">No readings yet</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = readings.map(r => `
+      <tr>
+        <td>${new Date(r.timestamp)
+              .toLocaleTimeString()}</td>
+        <td>${r.co_ppm?.toFixed(1)}</td>
+        <td>${r.aqi?.toFixed(1)}</td>
+        <td>${r.hc_ppm?.toFixed(1)}</td>
+        <td>${r.temperature?.toFixed(1)}</td>
+        <td>${r.engine_load || '--'}</td>
+        <td><span class="badge ${
+          r.emission_status === 'SAFE'    ? 'badge-safe' :
+          r.emission_status === 'WARNING' ? 'badge-warn' :
+                                            'badge-danger'
+        }">${r.emission_status}</span></td>
+        <td><span class="badge badge-safe">
+          ${r.overall_grade}
+        </span></td>
+      </tr>
+    `).join('');
+
+  } catch (err) {
+    console.error('Recent update error:', err);
+  }
+}
+
+// ── Reset Data ────────────────────────────
+async function resetData() {
+  if (!confirm('Reset all graph data?')) return;
+  await fetch('/reset');
+  alert('Data reset! Graph will refresh shortly.');
+  updateChart();
+  updateRecent();
+}
