@@ -324,6 +324,11 @@ function updateAdditional(data) {
 // ── Update Graph ──────────────────────────
 async function updateChart() {
   try {
+    if (!chart) {
+      console.warn('Chart not initialized yet');
+      return;
+    }
+
     const res      = await fetch('/api/history?hours=24');
     const readings = await res.json();
     
@@ -428,6 +433,11 @@ async function updateRecent() {
 
 // ── Reset All Data ────────────────────────
 async function resetData() {
+  if (!chart) {
+    alert('Chart not initialized yet');
+    return;
+  }
+  
   if (!confirm('Reset all graph data? This cannot be undone.'))
     return;
   await fetch('/reset');
@@ -440,12 +450,27 @@ async function resetData() {
 }
 
 // ── Initialize + Auto Refresh ─────────────
-updateLive();
-updateChart();
-updateHistory();
-updateRecent();
+function startDashboard() {
+  // Initial data load
+  updateLive();
+  updateChart();
+  updateHistory();
+  updateRecent();
 
-setInterval(updateLive,    5000);   // every 5 sec
-setInterval(updateChart,   15000);  // every 15 sec
-setInterval(updateHistory, 30000);  // every 30 sec
-setInterval(updateRecent,  15000);  // every 15 sec
+  // Auto refresh intervals
+  setInterval(updateLive,    5000);   // every 5 sec
+  setInterval(updateChart,   15000);  // every 15 sec
+  setInterval(updateHistory, 30000);  // every 30 sec
+  setInterval(updateRecent,  15000);  // every 15 sec
+  
+  console.log('Dashboard initialized and auto-refresh started');
+}
+
+// Wait for DOM to be ready before starting dashboard
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(startDashboard, 100);  // Small delay to ensure chart is initialized
+  });
+} else {
+  setTimeout(startDashboard, 100);
+}

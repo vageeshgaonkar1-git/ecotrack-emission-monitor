@@ -172,26 +172,23 @@ app.get('/test', (req, res) => {
     vibration_level: 0.8 + Math.random()
   };
 
+  testData.timestamp = new Date().toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata'
+  });
+
+  const processed = processReading(testData);
+  db.saveReading({ ...testData, ...processed });
+
+  console.log(`[Test] CO:${testData.co_ppm} AQI:${testData.aqi} Status:${processed.emission_status}`);
+  res.json({ success: true, ...processed });
+});
+
+// Reset database
 app.get('/reset', (req, res) => {
   const fs = require('fs');
   fs.writeFileSync('data.json', JSON.stringify({ readings: [] }));
   console.log('Database reset!');
   res.json({ success: true, message: 'All data cleared' });
-});
-
-  const emission_status = getEmissionStatus(
-    testData.co_ppm, testData.aqi, testData.hc_ppm
-  );
-
-  db.saveReading({
-    ...testData,
-    emission_status,
-    co_status:  testData.co_ppm < 4000 ? 'PASS' : 'FAIL',
-    hc_status:  testData.hc_ppm < 150  ? 'PASS' : 'FAIL',
-    overall_grade: getGrade(testData.co_ppm, testData.aqi, testData.hc_ppm)
-  });
-
-  res.json({ success: true, data: testData, status: emission_status });
 });
 
 app.listen(PORT, () => {
