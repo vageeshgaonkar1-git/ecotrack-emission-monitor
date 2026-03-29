@@ -525,7 +525,7 @@ Compare: ₹2380 nodes vs ₹50,000 stations
 
 ## 👥 Team
 
-Built at Sustainability Hardware Hackathon 2026
+Built at SAMYUTI Hardware Hackathon 2026 @ Chanakya University.
 
 ---
 
