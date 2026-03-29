@@ -186,7 +186,8 @@ app.get('/test', (req, res) => {
 // Reset database
 app.get('/reset', (req, res) => {
   const fs = require('fs');
-  fs.writeFileSync('data.json', JSON.stringify({ readings: [] }));
+  const dbPath = require('path').join(__dirname, 'data.json');
+  fs.writeFileSync(dbPath, JSON.stringify({ readings: [] }));
   console.log('Database reset!');
   res.json({ success: true, message: 'All data cleared' });
 });

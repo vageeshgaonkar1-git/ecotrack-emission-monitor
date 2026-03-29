@@ -25,9 +25,9 @@ function writeDB(data) {
 function saveReading(data) {
   const db = readDB();
   const reading = {
+    ...data,
     id: Date.now(),
-    timestamp: new Date().toISOString(),
-    ...data
+    timestamp: new Date().toISOString()  // always store as ISO for reliable parsing
   };
   db.readings.push(reading);
 
