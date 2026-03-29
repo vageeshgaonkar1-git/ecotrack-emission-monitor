@@ -1,103 +1,116 @@
 // ── Chart Setup ──────────────────────────
-// ── Chart Setup ──────────────────────────
-const canvas = document.getElementById('emissionChart');
-const ctx = canvas.getContext('2d');
+let chart = null;
 
-// Fix blurriness — match device pixel ratio
-const dpr = window.devicePixelRatio || 2;
-canvas.style.width  = canvas.offsetWidth  + 'px';
-canvas.style.height = canvas.offsetHeight + 'px';
-canvas.width  = canvas.offsetWidth  * dpr;
-canvas.height = canvas.offsetHeight * dpr;
-ctx.scale(dpr, dpr);
+function initChart() {
+  const canvas = document.getElementById('emissionChart');
+  if (!canvas) {
+    console.error('Canvas element not found');
+    return;
+  }
+  
+  const ctx = canvas.getContext('2d');
 
-const chart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: [],
-    datasets: [
-      {
-        label: 'CO (PPM)',
-        data: [],
-        borderColor: '#f85149',
-        backgroundColor: 'rgba(248,81,73,0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointRadius: 3,
-        pointHoverRadius: 5
-      },
-      {
-        label: 'AQI',
-        data: [],
-        borderColor: '#d29922',
-        backgroundColor: 'rgba(210,153,34,0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointRadius: 3,
-        pointHoverRadius: 5
-      },
-      {
-        label: 'HC (PPM)',
-        data: [],
-        borderColor: '#3fb950',
-        backgroundColor: 'rgba(63,185,80,0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointRadius: 3,
-        pointHoverRadius: 5
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    devicePixelRatio: dpr,
-    plugins: {
-      legend: {
-        labels: {
-          color: '#8b949e',
-          font: { size: 12 },
-          boxWidth: 12
+  // Fix blurriness — match device pixel ratio
+  const dpr = window.devicePixelRatio || 2;
+  canvas.style.width  = canvas.offsetWidth  + 'px';
+  canvas.style.height = canvas.offsetHeight + 'px';
+  canvas.width  = canvas.offsetWidth  * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  ctx.scale(dpr, dpr);
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'CO (PPM)',
+          data: [],
+          borderColor: '#f85149',
+          backgroundColor: 'rgba(248,81,73,0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        },
+        {
+          label: 'AQI',
+          data: [],
+          borderColor: '#d29922',
+          backgroundColor: 'rgba(210,153,34,0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        },
+        {
+          label: 'HC (PPM)',
+          data: [],
+          borderColor: '#3fb950',
+          backgroundColor: 'rgba(63,185,80,0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      devicePixelRatio: dpr,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#8b949e',
+            font: { size: 12 },
+            boxWidth: 12
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: '#161b22',
+          titleColor: '#e6edf3',
+          bodyColor: '#8b949e',
+          borderColor: '#30363d',
+          borderWidth: 1
         }
       },
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-        backgroundColor: '#161b22',
-        titleColor: '#e6edf3',
-        bodyColor: '#8b949e',
-        borderColor: '#30363d',
-        borderWidth: 1
-      }
-    },
-    interaction: {
-      mode: 'nearest',
-      axis: 'x',
-      intersect: false
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#8b949e',
-          maxTicksLimit: 6,        // ← show max 6 labels
-          maxRotation: 45,
-          font: { size: 10 }
-        },
-        grid: { color: '#21262d' }
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
       },
-      y: {
-        ticks: {
-          color: '#8b949e',
-          font: { size: 11 }
+      scales: {
+        x: {
+          ticks: {
+            color: '#8b949e',
+            maxTicksLimit: 6,        // ← show max 6 labels
+            maxRotation: 45,
+            font: { size: 10 }
+          },
+          grid: { color: '#21262d' }
         },
-        grid: { color: '#21262d' }
+        y: {
+          ticks: {
+            color: '#8b949e',
+            font: { size: 11 }
+          },
+          grid: { color: '#21262d' }
+        }
       }
     }
-  }
-});
+  });
+  
+  console.log('Chart initialized successfully');
+}
+
+// Initialize chart when page loads
+initChart();
 
 // ── Helpers ──────────────────────────────
 function getStatusClass(status) {
@@ -124,6 +137,39 @@ function formatTime(timestamp) {
       minute: '2-digit',
       second: '2-digit',
       hour12: true
+    });
+  } catch(e) {
+    return timestamp;
+  }
+}
+
+function formatDate(dateString) {
+  if (!dateString) return '--';
+  try {
+    // dateString is in format "2026-03-29"
+    // Parse it manually to avoid timezone issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const d = new Date(year, month - 1, day);
+    return d.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  } catch(e) {
+    return dateString;
+  }
+}
+
+function formatChartTime(timestamp) {
+  if (!timestamp) return '--';
+  try {
+    const d = new Date(timestamp);
+    if (isNaN(d)) return timestamp;
+    return d.toLocaleTimeString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
     });
   } catch(e) {
     return timestamp;
@@ -269,22 +315,30 @@ function updateAdditional(data) {
 // ── Update Graph ──────────────────────────
 async function updateChart() {
   try {
-    const res      = await fetch('/api/history?hours=1');
+    const res      = await fetch('/api/history?hours=24');
     const readings = await res.json();
-    if (!readings || !readings.length) return;
+    
+    console.log('Chart data fetched:', readings.length, 'readings');
+    
+    if (!readings || !readings.length) {
+      console.warn('No readings available for chart');
+      return;
+    }
 
     // ← Limit to last 20 points max for clean display
     const limited = readings.slice(-20);
 
     chart.data.labels
-      = limited.map(r => formatTime(r.timestamp));
+      = limited.map(r => formatChartTime(r.timestamp));
     chart.data.datasets[0].data
       = limited.map(r => parseFloat(r.co_ppm)  || 0);
     chart.data.datasets[1].data
       = limited.map(r => parseFloat(r.aqi)     || 0);
     chart.data.datasets[2].data
       = limited.map(r => parseFloat(r.hc_ppm)  || 0);
-    chart.update('active');
+    
+    console.log('Chart data updated with', limited.length, 'points');
+    chart.update();
 
   } catch (err) {
     console.error('Chart update error:', err);
@@ -307,10 +361,7 @@ async function updateHistory() {
 
     tbody.innerHTML = stats.map(s => `
       <tr>
-        <td>${new Date(s.date).toLocaleDateString('en-IN', {
-  timeZone: 'Asia/Kolkata',
-  day: '2-digit', month: 'short', year: 'numeric'
-})}</td>
+        <td>${formatDate(s.date)}</td>
         <td>${s.avg_co}</td>
         <td>${s.avg_aqi}</td>
         <td>${s.avg_hc}</td>
