@@ -1,5 +1,16 @@
 // ── Chart Setup ──────────────────────────
-const ctx = document.getElementById('emissionChart').getContext('2d');
+// ── Chart Setup ──────────────────────────
+const canvas = document.getElementById('emissionChart');
+const ctx = canvas.getContext('2d');
+
+// Fix blurriness — match device pixel ratio
+const dpr = window.devicePixelRatio || 2;
+canvas.style.width  = canvas.offsetWidth  + 'px';
+canvas.style.height = canvas.offsetHeight + 'px';
+canvas.width  = canvas.offsetWidth  * dpr;
+canvas.height = canvas.offsetHeight * dpr;
+ctx.scale(dpr, dpr);
+
 const chart = new Chart(ctx, {
   type: 'line',
   data: {
@@ -10,41 +21,78 @@ const chart = new Chart(ctx, {
         data: [],
         borderColor: '#f85149',
         backgroundColor: 'rgba(248,81,73,0.1)',
+        borderWidth: 2,
         tension: 0.4,
-        fill: true
+        fill: true,
+        pointRadius: 3,
+        pointHoverRadius: 5
       },
       {
         label: 'AQI',
         data: [],
         borderColor: '#d29922',
         backgroundColor: 'rgba(210,153,34,0.1)',
+        borderWidth: 2,
         tension: 0.4,
-        fill: true
+        fill: true,
+        pointRadius: 3,
+        pointHoverRadius: 5
       },
       {
         label: 'HC (PPM)',
         data: [],
         borderColor: '#3fb950',
         backgroundColor: 'rgba(63,185,80,0.1)',
+        borderWidth: 2,
         tension: 0.4,
-        fill: true
+        fill: true,
+        pointRadius: 3,
+        pointHoverRadius: 5
       }
     ]
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
-    devicePixelRatio: window.devicePixelRatio || 2,
+    devicePixelRatio: dpr,
     plugins: {
-      legend: { labels: { color: '#8b949e' } }
+      legend: {
+        labels: {
+          color: '#8b949e',
+          font: { size: 12 },
+          boxWidth: 12
+        }
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: '#161b22',
+        titleColor: '#e6edf3',
+        bodyColor: '#8b949e',
+        borderColor: '#30363d',
+        borderWidth: 1
+      }
+    },
+    interaction: {
+      mode: 'nearest',
+      axis: 'x',
+      intersect: false
     },
     scales: {
       x: {
-        ticks: { color: '#8b949e', maxTicksLimit: 8 ,font: { size: 11 }},
+        ticks: {
+          color: '#8b949e',
+          maxTicksLimit: 6,        // ← show max 6 labels
+          maxRotation: 45,
+          font: { size: 10 }
+        },
         grid: { color: '#21262d' }
       },
       y: {
-        ticks: { color: '#8b949e', font: { size: 11 } },
+        ticks: {
+          color: '#8b949e',
+          font: { size: 11 }
+        },
         grid: { color: '#21262d' }
       }
     }
@@ -225,15 +273,18 @@ async function updateChart() {
     const readings = await res.json();
     if (!readings || !readings.length) return;
 
+    // ← Limit to last 20 points max for clean display
+    const limited = readings.slice(-20);
+
     chart.data.labels
-      = readings.map(r => formatTime(r.timestamp));
+      = limited.map(r => formatTime(r.timestamp));
     chart.data.datasets[0].data
-      = readings.map(r => parseFloat(r.co_ppm)  || 0);
+      = limited.map(r => parseFloat(r.co_ppm)  || 0);
     chart.data.datasets[1].data
-      = readings.map(r => parseFloat(r.aqi)     || 0);
+      = limited.map(r => parseFloat(r.aqi)     || 0);
     chart.data.datasets[2].data
-      = readings.map(r => parseFloat(r.hc_ppm)  || 0);
-    chart.update();
+      = limited.map(r => parseFloat(r.hc_ppm)  || 0);
+    chart.update('active');
 
   } catch (err) {
     console.error('Chart update error:', err);

@@ -131,9 +131,17 @@ main {
   background: #161b22;
   border: 1px solid #30363d;
   border-radius: 12px;
-  padding: 24px;
-  height: 400px;
+  padding: 24px 16px 24px 16px;
+  height: 380px;
   position: relative;
+  width: 100%;
+  overflow: hidden;   /* prevents overflow breaking layout */
+}
+
+/* Make canvas crisp */
+.chart-box canvas {
+  image-rendering: crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
 }
 
 /* ── Tables ── */
