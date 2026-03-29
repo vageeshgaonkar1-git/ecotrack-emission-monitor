@@ -9,14 +9,10 @@ function initChart() {
   }
   
   const ctx = canvas.getContext('2d');
-
-  // Fix blurriness — match device pixel ratio
-  const dpr = window.devicePixelRatio || 2;
-  canvas.style.width  = canvas.offsetWidth  + 'px';
-  canvas.style.height = canvas.offsetHeight + 'px';
-  canvas.width  = canvas.offsetWidth  * dpr;
-  canvas.height = canvas.offsetHeight * dpr;
-  ctx.scale(dpr, dpr);
+  if (!ctx) {
+    console.error('Canvas context not found');
+    return;
+  }
 
   chart = new Chart(ctx, {
     type: 'line',
@@ -61,13 +57,14 @@ function initChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      devicePixelRatio: dpr,
       plugins: {
         legend: {
+          display: true,
           labels: {
             color: '#8b949e',
             font: { size: 12 },
-            boxWidth: 12
+            boxWidth: 12,
+            padding: 15
           }
         },
         tooltip: {
@@ -87,20 +84,28 @@ function initChart() {
       },
       scales: {
         x: {
+          display: true,
           ticks: {
             color: '#8b949e',
-            maxTicksLimit: 6,        // ← show max 6 labels
+            maxTicksLimit: 6,
             maxRotation: 45,
             font: { size: 10 }
           },
-          grid: { color: '#21262d' }
+          grid: { 
+            color: '#21262d',
+            drawBorder: false
+          }
         },
         y: {
+          display: true,
           ticks: {
             color: '#8b949e',
-            font: { size: 11 }
+            font: { size: 10 }
           },
-          grid: { color: '#21262d' }
+          grid: { 
+            color: '#21262d',
+            drawBorder: false
+          }
         }
       }
     }
@@ -109,8 +114,12 @@ function initChart() {
   console.log('Chart initialized successfully');
 }
 
-// Initialize chart when page loads
-initChart();
+// Initialize chart when DOM is readable
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initChart);
+} else {
+  initChart();
+}
 
 // ── Helpers ──────────────────────────────
 function getStatusClass(status) {
