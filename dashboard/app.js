@@ -1,5 +1,4 @@
 // ── Chart Setup ──────────────────────────
-
 const ctx = document.getElementById('emissionChart').getContext('2d');
 const chart = new Chart(ctx, {
   type: 'line',
@@ -35,16 +34,23 @@ const chart = new Chart(ctx, {
   options: {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: '#8b949e' } } },
+    plugins: {
+      legend: { labels: { color: '#8b949e' } }
+    },
     scales: {
-      x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
-      y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+      x: {
+        ticks: { color: '#8b949e', maxTicksLimit: 8 },
+        grid: { color: '#21262d' }
+      },
+      y: {
+        ticks: { color: '#8b949e' },
+        grid: { color: '#21262d' }
+      }
     }
   }
 });
 
 // ── Helpers ──────────────────────────────
-
 function getStatusClass(status) {
   if (status === 'SAFE')    return 'badge-safe';
   if (status === 'WARNING') return 'badge-warn';
@@ -61,96 +67,157 @@ function formatTime(timestamp) {
   return new Date(timestamp).toLocaleTimeString();
 }
 
-// ── Update Live Cards ─────────────────────
+function safeVal(val, decimals = 1) {
+  if (val === undefined || val === null || isNaN(val))
+    return '--';
+  return parseFloat(val).toFixed(decimals);
+}
 
+// ── Update Live Cards ─────────────────────
 async function updateLive() {
   try {
     const res  = await fetch('/api/live');
     const data = await res.json();
     if (!data || !data.co_ppm) return;
 
-    // Cards
+    // Main cards
     document.getElementById('co-value').innerHTML
-      = `${data.co_ppm.toFixed(1)} <span>PPM</span>`;
+      = `${safeVal(data.co_ppm)} <span>PPM</span>`;
     document.getElementById('aqi-value').innerHTML
-      = `${data.aqi.toFixed(1)} <span>AQI</span>`;
+      = `${safeVal(data.aqi)} <span>AQI</span>`;
     document.getElementById('hc-value').innerHTML
-      = `${data.hc_ppm.toFixed(1)} <span>PPM</span>`;
+      = `${safeVal(data.hc_ppm)} <span>PPM</span>`;
     document.getElementById('temp-value').innerHTML
-      = `${data.temperature.toFixed(1)} <span>°C</span>`;
+      = `${safeVal(data.temperature)} <span>°C</span>`;
     document.getElementById('humidity-value').textContent
-      = `${data.humidity.toFixed(1)}%`;
+      = `${safeVal(data.humidity)}%`;
 
     // Card badges
-    document.getElementById('co-status').textContent
-      = data.co_status;
+    const coS = data.co_status || 'PASS';
+    document.getElementById('co-status').textContent  = coS;
     document.getElementById('co-status').className
-      = `card-badge ${getPucClass(data.co_status)}`;
+      = `card-badge ${getPucClass(coS)}`;
 
-    document.getElementById('hc-status').textContent
-      = data.hc_status;
+    const hcS = data.hc_status || 'PASS';
+    document.getElementById('hc-status').textContent  = hcS;
     document.getElementById('hc-status').className
-      = `card-badge ${getPucClass(data.hc_status)}`;
+      = `card-badge ${getPucClass(hcS)}`;
 
-    const aqiStatus = data.aqi < 150 ? 'PASS' : 'FAIL';
-    document.getElementById('aqi-status').textContent = aqiStatus;
+    const aqiS = data.aqi < 200 ? 'PASS' : 'FAIL';
+    document.getElementById('aqi-status').textContent = aqiS;
     document.getElementById('aqi-status').className
-      = `card-badge ${getPucClass(aqiStatus)}`;
+      = `card-badge ${getPucClass(aqiS)}`;
 
     // Status bar
     const bar = document.getElementById('emission-status-bar');
-    bar.className = `status-bar ${getStatusClass(data.emission_status)}`;
+    const es  = data.emission_status || 'SAFE';
+    bar.className = `status-bar ${getStatusClass(es)}`;
+    const icon = es === 'SAFE' ? '✅' :
+                 es === 'WARNING' ? '⚠️' : '🔴';
     document.getElementById('emission-label').textContent
-      = `${data.emission_status === 'SAFE' ? '✅' :
-           data.emission_status === 'WARNING' ? '⚠️' : '🔴'}
-         Emission Status: ${data.emission_status}`;
+      = `${icon} Emission Status: ${es}`;
     document.getElementById('grade-badge').textContent
-      = `Grade: ${data.overall_grade}`;
+      = `Grade: ${data.overall_grade || 'A'}`;
 
     // Vehicle status
     const vs = document.getElementById('vehicle-status');
-    vs.textContent
-      = data.vehicle_status === 'RUNNING' ? '● VEHICLE RUNNING' : '● VEHICLE OFF';
-    vs.className
-      = `badge ${data.vehicle_status === 'RUNNING' ? 'badge-safe' : 'badge-warn'}`;
+    const vst = data.vehicle_status || 'UNKNOWN';
+    vs.textContent = vst === 'RUNNING'
+      ? '● VEHICLE RUNNING' : '● VEHICLE OFF';
+    vs.className = `badge ${
+      vst === 'RUNNING' ? 'badge-safe' : 'badge-warn'
+    }`;
 
     // PUC Table
     document.getElementById('puc-co').textContent
-      = `${data.co_ppm.toFixed(1)} PPM`;
+      = `${safeVal(data.co_ppm)} PPM`;
     document.getElementById('puc-hc').textContent
-      = `${data.hc_ppm.toFixed(1)} PPM`;
+      = `${safeVal(data.hc_ppm)} PPM`;
     document.getElementById('puc-aqi').textContent
-      = data.aqi.toFixed(1);
+      = safeVal(data.aqi);
     document.getElementById('puc-co-status').innerHTML
-      = `<span class="${getPucClass(data.co_status)}">${data.co_status}</span>`;
+      = `<span class="${getPucClass(coS)}">${coS}</span>`;
     document.getElementById('puc-hc-status').innerHTML
-      = `<span class="${getPucClass(data.hc_status)}">${data.hc_status}</span>`;
+      = `<span class="${getPucClass(hcS)}">${hcS}</span>`;
     document.getElementById('puc-aqi-status').innerHTML
-      = `<span class="${getPucClass(aqiStatus)}">${aqiStatus}</span>`;
+      = `<span class="${getPucClass(aqiS)}">${aqiS}</span>`;
 
     // Timestamp
     document.getElementById('last-updated').textContent
       = `Last updated: ${formatTime(data.timestamp)}`;
 
+    // Additional parameters
+    updateAdditional(data);
+
   } catch (err) {
     console.error('Live update error:', err);
   }
-  // At the end of updateLive(), add:
-updateAdditional(data);
+}
+
+// ── Update Additional Parameters ─────────
+function updateAdditional(data) {
+  // CO2
+  const co2El = document.getElementById('co2-value');
+  if (co2El) co2El.innerHTML
+    = `${data.co2_ppm || '--'} <span>PPM</span>`;
+
+  // NH3
+  const nh3El = document.getElementById('nh3-value');
+  if (nh3El) nh3El.innerHTML
+    = `${safeVal(data.nh3_ppm)} <span>PPM</span>`;
+
+  // Engine Load
+  const elEl = document.getElementById('engine-load');
+  if (elEl) elEl.textContent = data.engine_load || '--';
+
+  // Lambda
+  const lamEl = document.getElementById('lambda-value');
+  if (lamEl) lamEl.textContent = data.lambda || '--';
+
+  // Lambda status badge
+  const lsEl = document.getElementById('lambda-status');
+  if (lsEl) {
+    const ls = data.lambda_status || 'OPTIMAL';
+    lsEl.textContent = ls;
+    lsEl.className = `card-badge ${
+      ls === 'OPTIMAL' ? 'badge-safe' :
+      ls === 'RICH'    ? 'badge-warn' : 'badge-danger'
+    }`;
+  }
+
+  // Heat Index
+  const hiEl = document.getElementById('heat-index');
+  if (hiEl) hiEl.innerHTML
+    = `${safeVal(data.heat_index)} <span>°C</span>`;
+
+  // Benzene
+  const brEl = document.getElementById('benzene-risk');
+  const bbEl = document.getElementById('benzene-badge');
+  if (brEl && bbEl) {
+    const br = data.benzene_risk || 'NORMAL';
+    brEl.textContent = br;
+    bbEl.textContent = br;
+    bbEl.className = `card-badge ${
+      br === 'NORMAL' ? 'badge-safe' : 'badge-danger'
+    }`;
+  }
 }
 
 // ── Update Graph ──────────────────────────
-
 async function updateChart() {
   try {
     const res      = await fetch('/api/history?hours=1');
     const readings = await res.json();
-    if (!readings.length) return;
+    if (!readings || !readings.length) return;
 
-    chart.data.labels = readings.map(r => formatTime(r.timestamp));
-    chart.data.datasets[0].data = readings.map(r => r.co_ppm);
-    chart.data.datasets[1].data = readings.map(r => r.aqi);
-    chart.data.datasets[2].data = readings.map(r => r.hc_ppm);
+    chart.data.labels
+      = readings.map(r => formatTime(r.timestamp));
+    chart.data.datasets[0].data
+      = readings.map(r => parseFloat(r.co_ppm)  || 0);
+    chart.data.datasets[1].data
+      = readings.map(r => parseFloat(r.aqi)     || 0);
+    chart.data.datasets[2].data
+      = readings.map(r => parseFloat(r.hc_ppm)  || 0);
     chart.update();
 
   } catch (err) {
@@ -159,15 +226,16 @@ async function updateChart() {
 }
 
 // ── Update History Table ──────────────────
-
 async function updateHistory() {
   try {
     const res   = await fetch('/api/stats');
     const stats = await res.json();
     const tbody = document.getElementById('history-body');
+    if (!tbody) return;
 
-    if (!stats.length) {
-      tbody.innerHTML = '<tr><td colspan="6">No history yet</td></tr>';
+    if (!stats || !stats.length) {
+      tbody.innerHTML
+        = '<tr><td colspan="6">No history yet</td></tr>';
       return;
     }
 
@@ -177,7 +245,9 @@ async function updateHistory() {
         <td>${s.avg_co}</td>
         <td>${s.avg_aqi}</td>
         <td>${s.avg_hc}</td>
-        <td><span class="badge badge-safe">${s.overall_grade}</span></td>
+        <td><span class="badge badge-safe">
+          ${s.overall_grade || 'A'}
+        </span></td>
         <td>${s.total_readings}</td>
       </tr>
     `).join('');
@@ -187,64 +257,15 @@ async function updateHistory() {
   }
 }
 
-// ── Auto Refresh ──────────────────────────
-
-updateLive();
-updateChart();
-updateHistory();
-updateRecent();   
-
-
-// Live cards refresh every 5 seconds
-setInterval(updateLive, 5000);
-
-// Graph + history refresh every 30 seconds
-setInterval(updateChart,  30000);
-setInterval(updateHistory, 30000);
-setInterval(updateRecent,  30000);
-
-// ── Update Additional Parameters ─────────
-function updateAdditional(data) {
-  if (!data || !data.co2_ppm) return;
-
-  document.getElementById('co2-value').innerHTML
-    = `${data.co2_ppm} <span>PPM</span>`;
-  document.getElementById('nh3-value').innerHTML
-    = `${data.nh3_ppm} <span>PPM</span>`;
-  document.getElementById('engine-load').textContent
-    = data.engine_load || '--';
-  document.getElementById('lambda-value').textContent
-    = data.lambda || '--';
-  document.getElementById('heat-index').innerHTML
-    = `${data.heat_index} <span>°C</span>`;
-
-  // Lambda status badge
-  const ls = document.getElementById('lambda-status');
-  ls.textContent  = data.lambda_status;
-  ls.className    = `card-badge ${
-    data.lambda_status === 'OPTIMAL' ? 'badge-safe' :
-    data.lambda_status === 'RICH'    ? 'badge-warn' :
-                                       'badge-danger'
-  }`;
-
-  // Benzene
-  const br = document.getElementById('benzene-risk');
-  const bb = document.getElementById('benzene-badge');
-  br.textContent = data.benzene_risk;
-  bb.textContent = data.benzene_risk;
-  bb.className   = `card-badge ${
-    data.benzene_risk === 'NORMAL' ? 'badge-safe' : 'badge-danger'
-  }`;
-}
-
-// ── Update Last 5 Readings Table ──────────
+// ── Update Last 5 Readings ────────────────
 async function updateRecent() {
   try {
     const res      = await fetch('/api/recent');
     const readings = await res.json();
     const tbody    = document.getElementById('recent-body');
+    if (!tbody) return;
 
-    if (!readings.length) {
+    if (!readings || !readings.length) {
       tbody.innerHTML
         = '<tr><td colspan="8">No readings yet</td></tr>';
       return;
@@ -252,21 +273,22 @@ async function updateRecent() {
 
     tbody.innerHTML = readings.map(r => `
       <tr>
-        <td>${new Date(r.timestamp)
-              .toLocaleTimeString()}</td>
-        <td>${r.co_ppm?.toFixed(1)}</td>
-        <td>${r.aqi?.toFixed(1)}</td>
-        <td>${r.hc_ppm?.toFixed(1)}</td>
-        <td>${r.temperature?.toFixed(1)}</td>
+        <td>${formatTime(r.timestamp)}</td>
+        <td>${safeVal(r.co_ppm)}</td>
+        <td>${safeVal(r.aqi)}</td>
+        <td>${safeVal(r.hc_ppm)}</td>
+        <td>${safeVal(r.temperature)}</td>
         <td>${r.engine_load || '--'}</td>
-        <td><span class="badge ${
-          r.emission_status === 'SAFE'    ? 'badge-safe' :
-          r.emission_status === 'WARNING' ? 'badge-warn' :
-                                            'badge-danger'
-        }">${r.emission_status}</span></td>
-        <td><span class="badge badge-safe">
-          ${r.overall_grade}
-        </span></td>
+        <td>
+          <span class="badge ${getStatusClass(r.emission_status)}">
+            ${r.emission_status || '--'}
+          </span>
+        </td>
+        <td>
+          <span class="badge badge-safe">
+            ${r.overall_grade || 'A'}
+          </span>
+        </td>
       </tr>
     `).join('');
 
@@ -275,11 +297,26 @@ async function updateRecent() {
   }
 }
 
-// ── Reset Data ────────────────────────────
+// ── Reset All Data ────────────────────────
 async function resetData() {
-  if (!confirm('Reset all graph data?')) return;
+  if (!confirm('Reset all graph data? This cannot be undone.'))
+    return;
   await fetch('/reset');
-  alert('Data reset! Graph will refresh shortly.');
-  updateChart();
+  chart.data.labels = [];
+  chart.data.datasets.forEach(d => d.data = []);
+  chart.update();
   updateRecent();
+  updateHistory();
+  alert('Data reset successfully!');
 }
+
+// ── Initialize + Auto Refresh ─────────────
+updateLive();
+updateChart();
+updateHistory();
+updateRecent();
+
+setInterval(updateLive,    5000);   // every 5 sec
+setInterval(updateChart,   15000);  // every 15 sec
+setInterval(updateHistory, 30000);  // every 30 sec
+setInterval(updateRecent,  15000);  // every 15 sec
