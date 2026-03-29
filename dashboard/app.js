@@ -51,6 +51,17 @@ function initChart() {
           fill: true,
           pointRadius: 3,
           pointHoverRadius: 5
+        },
+        {
+          label: 'Temperature (°C)',
+          data: [],
+          borderColor: '#a371f7',
+          backgroundColor: 'rgba(163,113,247,0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 5
         }
       ]
     },
@@ -345,11 +356,13 @@ async function updateChart() {
     chart.data.labels
       = limited.map(r => formatChartTime(r.timestamp));
     chart.data.datasets[0].data
-      = limited.map(r => parseFloat(r.co_ppm)  || 0);
+      = limited.map(r => parseFloat(r.co_ppm)    || 0);
     chart.data.datasets[1].data
-      = limited.map(r => parseFloat(r.aqi)     || 0);
+      = limited.map(r => parseFloat(r.aqi)        || 0);
     chart.data.datasets[2].data
-      = limited.map(r => parseFloat(r.hc_ppm)  || 0);
+      = limited.map(r => parseFloat(r.hc_ppm)     || 0);
+    chart.data.datasets[3].data
+      = limited.map(r => parseFloat(r.temperature) || 0);
     
     console.log('Chart data updated with', limited.length, 'points');
     chart.update();
