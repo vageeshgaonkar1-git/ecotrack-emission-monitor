@@ -64,7 +64,13 @@ function getPucClass(status) {
 
 function formatTime(timestamp) {
   if (!timestamp) return '--';
-  return new Date(timestamp).toLocaleTimeString();
+  return new Date(timestamp).toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour:     '2-digit',
+    minute:   '2-digit',
+    second:   '2-digit',
+    hour12:   true
+  });
 }
 
 function safeVal(val, decimals = 1) {
@@ -241,7 +247,10 @@ async function updateHistory() {
 
     tbody.innerHTML = stats.map(s => `
       <tr>
-        <td>${s.date}</td>
+        <td>${new Date(s.date).toLocaleDateString('en-IN', {
+  timeZone: 'Asia/Kolkata',
+  day: '2-digit', month: 'short', year: 'numeric'
+})}</td>
         <td>${s.avg_co}</td>
         <td>${s.avg_aqi}</td>
         <td>${s.avg_hc}</td>

@@ -15,65 +15,86 @@ const PORT = 3000;
 // ── Enhanced Emission Processing ─────────
 
 function processReading(data) {
-  const { co_ppm, aqi, hc_ppm, temperature, 
-          humidity, vibration_level } = data;
+  const co_ppm    = parseFloat(data.co_ppm)       || 0;
+  const aqi       = parseFloat(data.aqi)          || 0;
+  const hc_ppm    = parseFloat(data.hc_ppm)       || 0;
+  const temp      = parseFloat(data.temperature)  || 0;
+  const humidity  = parseFloat(data.humidity)     || 0;
+  const vibration = parseFloat(data.vibration_level) || 0;
 
-  // ── PUC Status ──
-  const co_status  = co_ppm  < 4000 ? 'PASS' : 'FAIL';
-  const hc_status  = hc_ppm  < 150  ? 'PASS' : 'FAIL';
-  const aqi_status = aqi     < 200  ? 'PASS' : 'FAIL';
+  // ── Verified Indian BS6 PUC Standards ──
 
-  // ── Emission Status ──
+  // CO: BS6 limit = 0.3% = 3000 PPM
+  const co_status = co_ppm < 3000 ? 'PASS' : 'FAIL';
+  const co_warn   = co_ppm > 2000; // Early warning
+
+  // HC: BS6 limit = 100 PPM (4-wheeler) / 200 PPM (2-wheeler)
+  // Using 100 PPM as conservative limit
+  const hc_status = hc_ppm < 100 ? 'PASS' : 'FAIL';
+  const hc_warn   = hc_ppm > 80;  // Early warning
+
+  // AQI: CPCB India standard
+  // 0-100 = Safe, 101-200 = Moderate, 201+ = Poor
+  const aqi_status = aqi < 200 ? 'PASS' : 'FAIL';
+
+  // ── Emission Status (3 levels) ──
   let emission_status = 'SAFE';
-  if (co_ppm > 5000 || aqi > 300 || hc_ppm > 200)
-    emission_status = 'DANGER';
-  else if (co_ppm > 3000 || aqi > 150 || hc_ppm > 120)
-    emission_status = 'WARNING';
 
-  // ── Overall Grade ──
+  if (co_ppm > 3000 || aqi > 300 || hc_ppm > 100) {
+    emission_status = 'DANGER';
+  } else if (co_ppm > 2000 || aqi > 100 || hc_ppm > 80) {
+    emission_status = 'WARNING';
+  }
+
+  // ── Overall Grade (based on BS6) ──
   let overall_grade = 'A';
-  if      (co_ppm > 5000 || hc_ppm > 200) overall_grade = 'F';
-  else if (co_ppm > 3000 || hc_ppm > 150) overall_grade = 'C';
-  else if (co_ppm > 1000 || hc_ppm > 100) overall_grade = 'B';
+  if      (co_ppm > 3000 || hc_ppm > 100) overall_grade = 'F';
+  else if (co_ppm > 2000 || hc_ppm > 80)  overall_grade = 'C';
+  else if (co_ppm > 1000 || hc_ppm > 50)  overall_grade = 'B';
+  // else A
 
   // ── Additional Parameters ──
-
-  // CO2 estimate from MQ-135 (approximate)
-  const co2_ppm = Math.round(400 + (aqi * 2.1));
-
-  // NH3 estimate from MQ-135
-  const nh3_ppm = parseFloat((aqi * 0.08).toFixed(1));
-
-  // Benzene flag
+  const co2_ppm      = Math.round(400 + (aqi * 2.1));
+  const nh3_ppm      = parseFloat((aqi * 0.08).toFixed(1));
   const benzene_risk = aqi > 200 ? 'ELEVATED' : 'NORMAL';
 
-  // Engine load from vibration
+  // Engine load via vibration
   let engine_load = 'IDLE';
-  if      (vibration_level > 1.5) engine_load = 'HIGH';
-  else if (vibration_level > 0.8) engine_load = 'MEDIUM';
-  else if (vibration_level > 0.3) engine_load = 'LOW';
+  if      (vibration > 1.5) engine_load = 'HIGH';
+  else if (vibration > 0.8) engine_load = 'MEDIUM';
+  else if (vibration > 0.3) engine_load = 'LOW';
 
-  // Heat index (Steadman formula simplified)
-  const heat_index = parseFloat(
-    (temperature + 0.33 * (humidity / 100 * 6.105 *
-    Math.exp(17.27 * temperature / (237.7 + temperature))) - 4)
-    .toFixed(1)
-  );
+  // Heat index
+  let heat_index = temp;
+  try {
+    heat_index = parseFloat(
+      (temp + 0.33 * (humidity / 100 * 6.105 *
+      Math.exp(17.27 * temp / (237.7 + temp))) - 4)
+      .toFixed(1)
+    );
+  } catch(e) { heat_index = temp; }
 
-  // Lambda (air-fuel ratio indicator)
-  // Estimated from CO and HC levels
-  const lambda = parseFloat(
-    (1.0 - (co_ppm / 50000) - (hc_ppm / 10000)).toFixed(3)
-  );
-  const lambda_status = lambda > 0.97 && lambda < 1.03
-    ? 'OPTIMAL' : lambda < 0.97 ? 'RICH' : 'LEAN';
+  // Lambda (Air-Fuel Ratio indicator)
+  let lambda = 1.0;
+  let lambda_status = 'OPTIMAL';
+  try {
+    lambda = parseFloat(
+      (1.0 - (co_ppm/50000) - (hc_ppm/10000)).toFixed(3)
+    );
+    lambda_status = lambda > 0.97 && lambda < 1.03
+      ? 'OPTIMAL' : lambda < 0.97 ? 'RICH' : 'LEAN';
+  } catch(e) {
+    lambda = 1.0;
+    lambda_status = 'OPTIMAL';
+  }
 
   return {
     co_status, hc_status, aqi_status,
     emission_status, overall_grade,
     co2_ppm, nh3_ppm, benzene_risk,
     engine_load, heat_index,
-    lambda, lambda_status
+    lambda, lambda_status,
+    co_warn, hc_warn
   };
 }
 
