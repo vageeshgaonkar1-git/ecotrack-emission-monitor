@@ -524,6 +524,11 @@ Compare: ₹2380 nodes vs ₹50,000 stations
 ---
 
 ## 👥 Team
+Team name: **NAVinya**
+Members:
+        Alan Joy V
+        Narendra Babu M
+        Vageesh Vishwanath Gaonkar
 
 Built at SAMYUTI 2026 Hardware Hackathon @ Chanakya University.
 
@@ -534,5 +539,3 @@ Built at SAMYUTI 2026 Hardware Hackathon @ Chanakya University.
 MIT License — Open source for sustainability research and education.
 
 ---
-
-*EcoTrack doesn't just measure pollution. It creates accountability — one vehicle, one kilometer at a time.*
