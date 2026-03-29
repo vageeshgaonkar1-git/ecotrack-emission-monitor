@@ -34,16 +34,17 @@ const chart = new Chart(ctx, {
   options: {
     responsive: true,
     maintainAspectRatio: false,
+    devicePixelRatio: window.devicePixelRatio || 2,
     plugins: {
       legend: { labels: { color: '#8b949e' } }
     },
     scales: {
       x: {
-        ticks: { color: '#8b949e', maxTicksLimit: 8 },
+        ticks: { color: '#8b949e', maxTicksLimit: 8 ,font: { size: 11 }},
         grid: { color: '#21262d' }
       },
       y: {
-        ticks: { color: '#8b949e' },
+        ticks: { color: '#8b949e', font: { size: 11 } },
         grid: { color: '#21262d' }
       }
     }
