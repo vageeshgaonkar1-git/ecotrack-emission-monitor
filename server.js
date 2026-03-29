@@ -82,33 +82,28 @@ function processReading(data) {
 // ESP32 posts data here
 app.post('/data', (req, res) => {
   try {
-    const {
-      co_ppm = 0, aqi = 0, hc_ppm = 0,
-      temperature = 0, humidity = 0,
-      vehicle_status = 'UNKNOWN',
-      vibration_level = 0
-    } = req.body;
+    const incoming = req.body;
 
-    const emission_status = getEmissionStatus(co_ppm, aqi, hc_ppm);
-    const co_status  = co_ppm < 4000  ? 'PASS' : 'FAIL';
-    const hc_status  = hc_ppm < 150   ? 'PASS' : 'FAIL';
-    const overall_grade = getGrade(co_ppm, aqi, hc_ppm);
-    const PORT = process.env.PORT || 3000;
+    if (!incoming || !incoming.co_ppm) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing sensor data'
+      });
+    }
 
-    db.saveReading({
-      co_ppm, aqi, hc_ppm,
-      temperature, humidity,
-      vehicle_status, vibration_level,
-      emission_status, co_status,
-      hc_status, overall_grade
-    });
+    const processed = processReading(incoming);
+    db.saveReading({ ...incoming, ...processed });
 
-    console.log(`[${new Date().toLocaleTimeString()}] Reading saved | CO:${co_ppm} AQI:${aqi} Status:${emission_status}`);
-    res.json({ success: true, status: emission_status });
+    console.log(`[${new Date().toLocaleTimeString()}] CO:${incoming.co_ppm} AQI:${incoming.aqi} Status:${processed.emission_status} Grade:${processed.overall_grade}`);
+
+    res.json({ success: true, ...processed });
 
   } catch (err) {
-    console.error('Error saving reading:', err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('POST /data error:', err.message);
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 });
 
