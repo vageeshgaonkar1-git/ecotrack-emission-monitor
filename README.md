@@ -524,11 +524,11 @@ Compare: ₹2380 nodes vs ₹50,000 stations
 ---
 
 ## 👥 Team
-Team name: **NAVinya**
-Members:
-        Alan Joy V
-        Narendra Babu M
-        Vageesh Vishwanath Gaonkar
+Team name: **NAVinya**\n
+Members:\n
+        Alan Joy V\n
+        Narendra Babu M\n
+        Vageesh Vishwanath Gaonkar\n
 
 Built at SAMYUTI 2026 Hardware Hackathon @ Chanakya University.
 
