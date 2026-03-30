@@ -390,7 +390,7 @@ Enables reliable historical graphs
 | Emission Grade | A / B / C / F based on BS6 standards |
 | Vehicle Status | RUNNING / OFF via MPU6050 detection |
 | Additional Parameters | CO2, NH3, Engine Load, Lambda (AFR), Heat Index, Benzene Risk |
-| Live Graph | Line graph of CO, AQI, HC over last 1 hour |
+| Live Graph | Line graph of CO, AQI, HC, Temperature over last 24 hours |
 | PUC Comparison | Side-by-side vs Indian BS6 legal limits |
 | Last 5 Readings | Instant recent history table |
 | Session History | Daily averages with grade |
